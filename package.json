@@ -1,0 +1,27 @@
+{
+  "name": "restful",
+  "version": "1.0.0",
+  "description": "Node.js RESTful API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Stipecim/RESTful-ApiPractice.git"
+  },
+  "keywords": [
+    "node",
+    "RESTful",
+    "API"
+  ],
+  "author": "Stipan Ecim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Stipecim/RESTful-ApiPractice/issues"
+  },
+  "homepage": "https://github.com/Stipecim/RESTful-ApiPractice#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
