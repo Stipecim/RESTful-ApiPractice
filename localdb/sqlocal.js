@@ -14,11 +14,55 @@ class localdb {
         this._db.run(sql, data, function (err) {
             if(err) callback (err);
 
-            console.log("successfully writing to Database");
+            console.log("successfully writing to Database.");
             callback(null);
         });
     };
-   
+
+    RreadFromDB(sql, data, callback) {
+        this._db.get(sql, [data], function (err, obj) {
+            if(err) callback(err, null);
+            
+
+            console.log("Succesfully read from Database.");
+            callback(null, obj);
+        });
+    }
+
+    ReadAllDB(sql, callback) {
+        this._db.get(sql, function (err, rows) {})
+        .all(sql, function (err, rows){
+            if(err) callback(err, null);
+            
+            console.log("Succesfully read from Database.");
+            callback(null, rows);
+        });
+    }
+    
+    DeleteFromDB(sql, id, callback) {
+        this._db.run(sql, id, function (err) {
+            if(err) callback (err);
+
+            
+            console.log(`Deleted: ${id} successfully deleted from Database.`);
+            callback(null);
+        });
+    }
+
+    PatchDB (sql, data, callback) {
+        const props = Object.keys(data) 
+        const {id, [props[1]]: value} = data;
+        console.log(sql);
+        
+        this._db.run(sql, [value, id], function (err) {
+            if(err) callback (err);
+
+            console.log("successfully writing to Database.");
+            callback(data);
+
+            
+        });
+    };
 }
 
 
