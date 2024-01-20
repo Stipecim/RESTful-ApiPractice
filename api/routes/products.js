@@ -11,7 +11,7 @@ router.get('/', (req, res, next) => {
     const localdb = new LOCALDB();
     sql = "SELECT * FROM Product";
 
-    localdb.ReadAllDB(sql, (err, rows) => {
+    localdb.ReadAllDB(sql, (err, data) => {
         if(err) {
             console.error("Error writing to database", err);
             return res.status(500).json({
@@ -20,9 +20,22 @@ router.get('/', (req, res, next) => {
                 error: "Internal Server Error"
             });
         }
-        console.log(rows);
-        if(rows && rows.length > 0) {
-            return res.json({rows});
+        
+        console.log(data);
+        if(data && data.length > 0) {
+           
+            const responseData = data.map(product => ({
+                id: product.ID,
+                name: product.name,
+                price: product.price,
+                request: {
+                    type: "GET",
+                    url: "http://localhost:3000/products/" + product.ID
+                }
+            }));
+           
+           return res.json({responseData});
+            
         }else {
             return res.json({
                 status: 404,
@@ -70,12 +83,18 @@ router.post('/',  (req, res, next) => {
                 });
             }
 
-            return res.json({
-                message: 'Handling GET request to /products',
-                success: true,
-                name: req.body.name,
-                price: req.body.price
+            const [ID, name, price] = data;
+            const responseData = ({
+                message: 'Succesfully created',
+                id: ID,
+                name: name,
+                price: price,
+                request: {
+                    type: "GET",
+                    url: "http://localhost:3000/products/" + ID
+                }
             });
+            return res.json({responseData});
         });
 });
 
@@ -93,13 +112,22 @@ router.get('/:productID', (req, res, next) => {
                 error: "Internal Server Error"
             });
         }
-        
+       
         if(data === undefined) return res.json({
             status: 404,
             success: false,
             error: "ID not found"
-        })
-        return res.json(data);
+        });
+        console.log("hello");
+        return res.json({
+            id: data.ID,
+            name: data.name,
+            price: data.price,
+            request: {
+                type: "GET",
+                url: "http://localhost:3000/products" + data.ID
+            }
+        });
     });
 });
 
@@ -109,7 +137,7 @@ router.patch('/:productID', (req, res, next) => {
     const id = req.params.productID;
     const updateOps = req.body;
     
-    
+    console.log(updateOps);
     updateOps.forEach(update => {
         const {propsName, value} = update;
         console.log(value);
@@ -118,8 +146,14 @@ router.patch('/:productID', (req, res, next) => {
             if(err) console.error("Error updating item: ", err);
         });
     });
-
-    return res.json(updateOps);
+    const responseData = ({
+        message: 'Succesfully updated',
+        request: {
+            type: "GET",
+            url: "http://localhost:3000/products/" + id
+        }
+    });
+    return res.json(responseData);
 })
 
 router.delete('/:productID', (req, res, next) => {
@@ -138,8 +172,16 @@ router.delete('/:productID', (req, res, next) => {
         }
 
         return res.json({
-            message: "successfuly deleted the item!"
-        })
+            message: "successfuly deleted the item!",
+            request: {
+                type: "POST",
+                url: "http://localhost:3000/products/",
+                data: {
+                    name: "String",
+                    price: "INTEGER"
+                }
+            }
+        });
         
     });
 

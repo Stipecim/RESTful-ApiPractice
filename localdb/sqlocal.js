@@ -11,11 +11,11 @@ class localdb {
 
     WriteToDB (sql, data, callback) {
         
-        this._db.run(sql, data, function (err) {
-            if(err) callback (err);
+        this._db.run(sql, data, function (err, obj) {
+            if(err) callback (err, null);
 
             console.log("successfully writing to Database.");
-            callback(null);
+            callback(null, obj);
         });
     };
 
