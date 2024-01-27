@@ -5,8 +5,10 @@ const bodyParser = require('body-parser');
 
 const productRoutes = require('./api/routes/products');
 const orderRoutes = require('./api/routes/orders');
+const userRoutes = require('./api/routes/user');
 
 app.use(morgan('dev'));
+app.use('/uploads',express.static('uploads'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
@@ -27,13 +29,14 @@ app.use((req, res, next) => {
 // routes that handle requests
 app.use('/products', productRoutes);
 app.use('/order', orderRoutes);
+app.use('/user', userRoutes);
 
 // Error handling if we dont specifly existing rout we will get an error
 // we crate new object Error and by assigning it with new keywoard to error variable
 // then we give it a status 404 - which means not found 
 // then error gets passed with function called next that initiates next function in row
 app.use((req, res, next) => {
-    const error = new Error('Not found');
+    const error = new Error('Route Not found');
     error.status = 404;
     next(error); // error gets passed to a next function 
 });

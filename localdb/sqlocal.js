@@ -4,7 +4,7 @@ const path = require('path');
 
 class localdb {
     _db = new sqlite.Database(path.resolve(__dirname, 'node-rest-shop.db'), sqlite.OPEN_READWRITE, (err) => {
-        if(err) return console.error(err, path.resolve(__dirname, 'rest.db'));
+        if(err) return console.error(err, path.resolve(__dirname, 'node-rest-shop.db'));
 
         console.log('succesfully connected to Database.');
     });
@@ -13,19 +13,20 @@ class localdb {
         
         this._db.run(sql, data, function (err, obj) {
             if(err) callback (err, null);
-
-            console.log("successfully writing to Database.");
-            callback(null, obj);
+            else {
+                console.log("successfully writing to Database.");
+                callback(null, obj);
+            }
         });
     };
 
     RreadFromDB(sql, data, callback) {
         this._db.get(sql, [data], function (err, obj) {
             if(err) callback(err, null);
-            
-
-            console.log("Succesfully read from Database.");
-            callback(null, obj);
+            else {
+                console.log("Succesfully read from Database.");
+                callback(null, obj); 
+            }
         });
     }
 
@@ -42,10 +43,10 @@ class localdb {
     DeleteFromDB(sql, id, callback) {
         this._db.run(sql, id, function (err) {
             if(err) callback (err);
-
-            
-            console.log(`Deleted: ${id} successfully deleted from Database.`);
-            callback(null);
+            else {
+                console.log(`Deleted: ${id} successfully deleted from Database.`);
+                callback(null);
+            }
         });
     }
 

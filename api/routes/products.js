@@ -1,19 +1,50 @@
+        //express
 const express = require('express');
 const router = express.Router();
-const LOCALDB = require('../../localdb/sqlocal');
-const generateUniqueID = require('generate-unique-id');
+//-----------------------------
 
+const LOCALDB = require('../../localdb/sqlocal');
+const generateUniqueID = require('../utils/generateUID');
+const productIDs = require('./productIDs.json');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+      cb(null, "uploads");
+    },
+    filename: function(req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+      cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    if(file.mimetype === 'image/jpeg' || file.mimetype ==='image/png') {
+        cb(null, true);
+    }else {
+        cb(null, false);    
+    }
+}
+const upload = multer({
+    storage: storage, 
+    limits: {
+        fileSize: 1024 * 1024 * 5
+    },
+    fileFilter: fileFilter
+});
 
 let sql;
 
-
+        
 router.get('/', (req, res, next) => {
     const localdb = new LOCALDB();
     sql = "SELECT * FROM Product";
 
     localdb.ReadAllDB(sql, (err, data) => {
         if(err) {
-            console.error("Error writing to database", err);
+            console.error("Error reading from database", err);
             return res.status(500).json({
                 status: 500,
                 success: false,
@@ -28,6 +59,7 @@ router.get('/', (req, res, next) => {
                 id: product.ID,
                 name: product.name,
                 price: product.price,
+                productImage: product.productImage,
                 request: {
                     type: "GET",
                     url: "http://localhost:3000/products/" + product.ID
@@ -47,31 +79,29 @@ router.get('/', (req, res, next) => {
 
 });
 
-router.post('/',  (req, res, next) => {
+router.post('/', upload.single('Image'), (req, res, next) => {
+        
         const localdb = new LOCALDB();
-        const id = generateUniqueID({
-            useLetters: true,
-            useNumbers: true,
-        });
-        ;
-       
+        const id = generateUniqueID();
+        
         const data = [
             id,
             req.body.name,
-            req.body.price
+            req.body.price,
+            req.file.path
         ];
-
-        sql = "INSERT INTO Product(ID,name, price) VALUES (?,?,?)";
+        console.log(req.body.name);
+        sql = "INSERT INTO Product(productID,name, price, productImage) VALUES (?,?,?,?)";
 
         if(!data[1] || !data[2]) return res.json({
             status: 301,
             message: "you need to include name and price"
         });
 
-        if(!Number.isInteger(data[2])) return res.json({
-            status: 302,
-            message: "number has to be integer "
-        });
+        if(!Number.isInteger(data[2])) {
+            data[2] = parseFloat(data[2]);
+        }
+        
 
         localdb.WriteToDB(sql, data, (err) => {
             if(err) {
@@ -81,26 +111,34 @@ router.post('/',  (req, res, next) => {
                     success: false,
                     error: "Internal Server Error"
                 });
-            }
+            }else {
 
-            const [ID, name, price] = data;
-            const responseData = ({
-                message: 'Succesfully created',
-                id: ID,
-                name: name,
-                price: price,
-                request: {
-                    type: "GET",
-                    url: "http://localhost:3000/products/" + ID
-                }
-            });
-            return res.json({responseData});
+                productIDs.push(id);
+
+                fs.promises.writeFile(path.resolve(__dirname, 'productIDs.json'), JSON.stringify(productIDs, null, 2), 'utf8');
+
+                    //creating response message after success
+                const [ID, name, price, productImage] = data;
+                const responseData = ({
+                    message: 'Succesfully created',
+                    id: ID,
+                    name: name,
+                    price: price,
+                    productimage: productImage,
+                    request: {
+                        type: "GET",
+                        url: "http://localhost:3000/products/" + ID
+                    }
+                });
+                console.log('ID added to ProductIDs'); // -Dev
+                return res.json({responseData});
+            }
         });
 });
 
-router.get('/:productID', (req, res, next) => {
+router.get('/:productID',  (req, res, next) => {
     const id = req.params.productID;
-    sql = 'SELECT * from Product WHERE ID = ?';
+    sql = 'SELECT * from Product WHERE product.ID = ?';
     const localdb = new LOCALDB();
 
     localdb.RreadFromDB(sql, id, (err, data) => {
@@ -123,6 +161,7 @@ router.get('/:productID', (req, res, next) => {
             id: data.ID,
             name: data.name,
             price: data.price,
+            productImage: data.productImage,
             request: {
                 type: "GET",
                 url: "http://localhost:3000/products" + data.ID
@@ -154,7 +193,7 @@ router.patch('/:productID', (req, res, next) => {
         }
     });
     return res.json(responseData);
-})
+});
 
 router.delete('/:productID', (req, res, next) => {
     const localdb = new LOCALDB();
@@ -187,5 +226,6 @@ router.delete('/:productID', (req, res, next) => {
 
 
 
-})
+});
+
 module.exports = router;
