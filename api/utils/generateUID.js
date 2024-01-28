@@ -1,5 +1,5 @@
 const generateUniqueID = require('generate-unique-id');
-const productIDs = require('../routes/productIDs.json');
+const productIDs = require('../controllers/productIDs.json');
 
 const generate = () => {
     

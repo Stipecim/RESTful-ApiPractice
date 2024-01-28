@@ -43,6 +43,7 @@ class localdb {
     DeleteFromDB(sql, id, callback) {
         this._db.run(sql, id, function (err) {
             if(err) callback (err);
+
             else {
                 console.log(`Deleted: ${id} successfully deleted from Database.`);
                 callback(null);

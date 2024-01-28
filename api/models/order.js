@@ -1,4 +1,4 @@
-const LOCALDB = require('../../localdb/sqlocal');
+
 
 function createObject(_id, productID, quantity) {
     return {
